@@ -107,7 +107,7 @@ void switching(void* data)
 
 int main (void)
 {
-	char character = '1';
+	char speed = '1';
     system_init ();
     ir_uart_init ();
     navswitch_init ();
@@ -125,21 +125,26 @@ int main (void)
     	tinygl_update ();
     	navswitch_update();
     	if (navswitch_push_event_p (NAVSWITCH_NORTH)) {
-    		character += 1;
-    		if (character > '5') {
-    			character = '1';
+    		speed += 1;
+    		if (speed > '5') {
+    			speed = '1';
     		}
     	}
     	if (navswitch_push_event_p (NAVSWITCH_SOUTH)) {
-    		character -= 1;
-    		if (character < '1') {
-    			character = '5';
+    		speed -= 1;
+    		if (speed < '1') {
+    			speed = '5';
     		}
     	}
-    	display_character (character);
+    	display_character (speed);
     	if (navswitch_push_event_p (NAVSWITCH_PUSH)) {
+            ir_uart_putc(speed);
     		counter += 1;
     	}
+        if (ir_uart_read_ready_p()) {
+            speed = ir_uart_getc();
+            counter += 1;
+        }
 	}
 	tinygl_clear();
 	game_info game = {0, 0, 0, 0};
