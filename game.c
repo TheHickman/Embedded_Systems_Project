@@ -6,6 +6,7 @@
 #include "ledmat.h"
 #include "timer.h"
 #include "task.h"
+#include "ir_uart.h"
 
 
 typedef struct important
@@ -31,35 +32,35 @@ void display_character (char character)
 }
 
 
-void display_arrow(char direction) 
+void display_arrow(char direction, int count) 
 {
 	if (direction == 'U') {
-		tinygl_draw_line(tinygl_point(2, 1), tinygl_point(2, 5), 1);
-		tinygl_draw_point(tinygl_point(1, 2), 1);
-		tinygl_draw_point(tinygl_point(3, 2), 1);
-		tinygl_draw_point(tinygl_point(0, 3), 1);
-		tinygl_draw_point(tinygl_point(4, 3), 1);
+		tinygl_draw_line(tinygl_point(2, 2-(count%3)), tinygl_point(2, 6-(count%3)), 1);
+		tinygl_draw_point(tinygl_point(1, 3-(count%3)), 1);
+		tinygl_draw_point(tinygl_point(3, 3-(count%3)), 1);
+		tinygl_draw_point(tinygl_point(0, 4-(count%3)), 1);
+		tinygl_draw_point(tinygl_point(4, 4-(count%3)), 1);
 	}
 	if (direction == 'D') {
-		tinygl_draw_line(tinygl_point(2, 1), tinygl_point(2, 5), 1);
-		tinygl_draw_point(tinygl_point(1, 4), 1);
-		tinygl_draw_point(tinygl_point(3, 4), 1);
-		tinygl_draw_point(tinygl_point(0, 3), 1);
-		tinygl_draw_point(tinygl_point(4, 3), 1);
+		tinygl_draw_line(tinygl_point(2, 2-(count%3)), tinygl_point(2, 6-(count%3)), 1);
+		tinygl_draw_point(tinygl_point(1, 5-(count%3)), 1);
+		tinygl_draw_point(tinygl_point(3, 5-(count%3)), 1);
+		tinygl_draw_point(tinygl_point(0, 4-(count%3)), 1);
+		tinygl_draw_point(tinygl_point(4, 4-(count%3)), 1);
 	}
 	if (direction == 'L') {
-		tinygl_draw_line(tinygl_point(0, 3), tinygl_point(5, 3), 1);
-		tinygl_draw_point(tinygl_point(1, 2), 1);
-		tinygl_draw_point(tinygl_point(1, 4), 1);
-		tinygl_draw_point(tinygl_point(2, 1), 1);
-		tinygl_draw_point(tinygl_point(2, 5), 1);
+		tinygl_draw_line(tinygl_point(0, 4-(count%3)), tinygl_point(5, 4-(count%3)), 1);
+		tinygl_draw_point(tinygl_point(1, 3-(count%3)), 1);
+		tinygl_draw_point(tinygl_point(1, 5-(count%3)), 1);
+		tinygl_draw_point(tinygl_point(2, 2-(count%3)), 1);
+		tinygl_draw_point(tinygl_point(2, 6-(count%3)), 1);
 	}
 	if (direction == 'R') {
-		tinygl_draw_line(tinygl_point(0, 3), tinygl_point(5, 3), 1);
-		tinygl_draw_point(tinygl_point(3, 2), 1);
-		tinygl_draw_point(tinygl_point(3, 4), 1);
-		tinygl_draw_point(tinygl_point(2, 1), 1);
-		tinygl_draw_point(tinygl_point(2, 5), 1);
+		tinygl_draw_line(tinygl_point(0, 4-(count%3)), tinygl_point(5, 4-(count%3)), 1);
+		tinygl_draw_point(tinygl_point(3, 3-(count%3)), 1);
+		tinygl_draw_point(tinygl_point(3, 5-(count%3)), 1);
+		tinygl_draw_point(tinygl_point(2, 2-(count%3)), 1);
+		tinygl_draw_point(tinygl_point(2, 6-(count%3)), 1);
 	}	
 }
 
@@ -83,11 +84,13 @@ void switching(void* data)
 	game_info* game = (game_info*) data;
 	char arrows[4] = {'R', 'L', 'D', 'U'};
 	if (game->numarrows == 3) {
+        tinygl_clear();
 		display_mess("Points: ");
+        tinygl_clear();
 		display_mess("Winner!");
 	}
 	else if (game->display == 0) {
-		display_arrow(arrows[game->randomIndex]);
+		display_arrow(arrows[game->randomIndex], game->count);
 		game->display += 1;
 		game->count += 1;
 	}
@@ -106,6 +109,7 @@ int main (void)
 {
 	char character = '1';
     system_init ();
+    ir_uart_init ();
     navswitch_init ();
     timer_init();
     tinygl_init(500);
@@ -142,7 +146,7 @@ int main (void)
 	task_t tasks[] = 
 	{
 		{.func = call_tinygl_update_to_avoid_warnings, .period = TASK_RATE/2200, .data = 0},
-		{.func = switching, .period = TASK_RATE, .data = &game}
+		{.func = switching, .period = TASK_RATE/4, .data = &game}
 	};
 	task_schedule(tasks, 2);
 }
