@@ -7,28 +7,25 @@
 #include "timer.h"
 #include "task.h"
 
-int num = 0;
 
-void switching(void)
+typedef struct important
+ {
+     int display;
+     int count;
+     int randomIndex;
+     int numarrows;
+ } game_info;
+
+void call_tinygl_update_to_avoid_warnings(void *data)
 {
-	char arrows[4] = {'R', 'L', 'D', 'U'};
-	timer_tick_t timer = timer_get();
-	int randomIndex = ((timer*1103515245 + 12345)/65536)%4;
-	if (num == 0) {
-		display_arrow(arrows[randomIndex]);
-		num += 1;
-	}
-	else {
-		tinygl_clear();
-		num = 0;
-	}
+	data = data;
+	tinygl_update();
 }
 
-void display_character (char* character)
+void display_character (char character)
 {
     char buffer[2];
-
-    buffer[0] = character;
+	buffer[0] = character;
     buffer[1] = '\0';
     tinygl_text (buffer);
 }
@@ -67,7 +64,7 @@ void display_arrow(char direction)
 }
 
 
-void display_it (char* message) {
+void display_mess (char* message) {
     uint8_t counter = 0;
     tinygl_text_mode_set (TINYGL_TEXT_MODE_SCROLL);
     tinygl_text(message);
@@ -81,6 +78,30 @@ void display_it (char* message) {
     }
 }
 
+void switching(void* data)
+{
+	game_info* game = (game_info*) data;
+	char arrows[4] = {'R', 'L', 'D', 'U'};
+	if (game->numarrows == 3) {
+		display_mess("Points: ");
+		display_mess("Winner!");
+	}
+	else if (game->display == 0) {
+		display_arrow(arrows[game->randomIndex]);
+		game->display += 1;
+		game->count += 1;
+	}
+	else {
+		tinygl_clear();
+		game->display = 0;
+	}
+	if (game->count%3 == 0) {
+		timer_tick_t timer = timer_get();
+		game->randomIndex = ((timer*1103515245 + 12345)/65536)%4;
+		game->numarrows += 1;
+	}
+}
+
 int main (void)
 {
 	char character = '1';
@@ -92,7 +113,7 @@ int main (void)
     tinygl_text_speed_set(20);
 
     pacer_init(500);
-    display_it("SELECT A SPEED");
+    display_mess("SELECT A SPEED");
     uint8_t counter = 0;
     while (counter == 0)
     {
@@ -117,10 +138,11 @@ int main (void)
     	}
 	}
 	tinygl_clear();
+	game_info game = {0, 0, 0, 0};
 	task_t tasks[] = 
 	{
-		{.func = tinygl_update, .period = TASK_RATE/2200},
-		{.func = switching, .period = TASK_RATE}
+		{.func = call_tinygl_update_to_avoid_warnings, .period = TASK_RATE/2200, .data = 0},
+		{.func = switching, .period = TASK_RATE, .data = &game}
 	};
 	task_schedule(tasks, 2);
 }
