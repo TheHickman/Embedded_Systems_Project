@@ -11,7 +11,17 @@ int num = 0;
 
 void switching(void)
 {
-	display_arrow('U');
+	char arrows[4] = {'R', 'L', 'D', 'U'};
+	timer_tick_t timer = timer_get();
+	int randomIndex = ((timer*1103515245 + 12345)/65536)%4;
+	if (num == 0) {
+		display_arrow(arrows[randomIndex]);
+		num += 1;
+	}
+	else {
+		tinygl_clear();
+		num = 0;
+	}
 }
 
 void display_character (char* character)
@@ -56,16 +66,6 @@ void display_arrow(char direction)
 	}	
 }
 
-void choose_arrow(char level_choice)
-{
-	char arrows[4] = {'R', 'L', 'D', 'U'};
-	timer_tick_t timer = timer_get();
-	int randomIndex = (timer/2)%4;
-	while(1) {
-		display_arrow(arrows[randomIndex]);
-		tinygl_update();
-	}		
-}
 
 void display_it (char* message) {
     uint8_t counter = 0;
