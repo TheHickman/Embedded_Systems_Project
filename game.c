@@ -5,6 +5,14 @@
 #include "navswitch.h"
 #include "ledmat.h"
 #include "timer.h"
+#include "task.h"
+
+int num = 0;
+
+void switching(void)
+{
+	display_arrow('U');
+}
 
 void display_character (char* character)
 {
@@ -15,35 +23,36 @@ void display_character (char* character)
     tinygl_text (buffer);
 }
 
+
 void display_arrow(char direction) 
 {
 	if (direction == 'U') {
-		ledmat_display_column (0b0001000, 0);
-		ledmat_display_column (0b0000100, 1);
-		ledmat_display_column (0b0111110, 2);
-		ledmat_display_column (0b0000100, 3);
-		ledmat_display_column (0b0001000, 4);
+		tinygl_draw_line(tinygl_point(2, 1), tinygl_point(2, 5), 1);
+		tinygl_draw_point(tinygl_point(1, 2), 1);
+		tinygl_draw_point(tinygl_point(3, 2), 1);
+		tinygl_draw_point(tinygl_point(0, 3), 1);
+		tinygl_draw_point(tinygl_point(4, 3), 1);
 	}
 	if (direction == 'D') {
-		ledmat_display_column (0b0001000, 0);
-		ledmat_display_column (0b0010000, 1);
-		ledmat_display_column (0b0111110, 2);
-		ledmat_display_column (0b0010000, 3);
-		ledmat_display_column (0b0001000, 4);
+		tinygl_draw_line(tinygl_point(2, 1), tinygl_point(2, 5), 1);
+		tinygl_draw_point(tinygl_point(1, 4), 1);
+		tinygl_draw_point(tinygl_point(3, 4), 1);
+		tinygl_draw_point(tinygl_point(0, 3), 1);
+		tinygl_draw_point(tinygl_point(4, 3), 1);
 	}
 	if (direction == 'L') {
-		ledmat_display_column (0b0001000, 0);
-		ledmat_display_column (0b0011100, 1);
-		ledmat_display_column (0b0101010, 2);
-		ledmat_display_column (0b0001000, 3);
-		ledmat_display_column (0b0001000, 4);
+		tinygl_draw_line(tinygl_point(0, 3), tinygl_point(5, 3), 1);
+		tinygl_draw_point(tinygl_point(1, 2), 1);
+		tinygl_draw_point(tinygl_point(1, 4), 1);
+		tinygl_draw_point(tinygl_point(2, 1), 1);
+		tinygl_draw_point(tinygl_point(2, 5), 1);
 	}
 	if (direction == 'R') {
-		ledmat_display_column (0b0001000, 0);
-		ledmat_display_column (0b0001000, 1);
-		ledmat_display_column (0b0101010, 2);
-		ledmat_display_column (0b0011100, 3);
-		ledmat_display_column (0b0001000, 4);
+		tinygl_draw_line(tinygl_point(0, 3), tinygl_point(5, 3), 1);
+		tinygl_draw_point(tinygl_point(3, 2), 1);
+		tinygl_draw_point(tinygl_point(3, 4), 1);
+		tinygl_draw_point(tinygl_point(2, 1), 1);
+		tinygl_draw_point(tinygl_point(2, 5), 1);
 	}	
 }
 
@@ -55,8 +64,7 @@ void choose_arrow(char level_choice)
 	while(1) {
 		display_arrow(arrows[randomIndex]);
 		tinygl_update();
-	}	
-    	
+	}		
 }
 
 void display_it (char* message) {
@@ -108,6 +116,11 @@ int main (void)
     		counter += 1;
     	}
 	}
-    tinygl_clear();
-    choose_arrow(character);
+	tinygl_clear();
+	task_t tasks[] = 
+	{
+		{.func = tinygl_update, .period = TASK_RATE/2200},
+		{.func = switching, .period = TASK_RATE}
+	};
+	task_schedule(tasks, 2);
 }
