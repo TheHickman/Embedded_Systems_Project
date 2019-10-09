@@ -99,7 +99,7 @@ void switch_arrow(game_info* game)
     char arrows[4] = {'R', 'L', 'D', 'U'};
 
     timer_tick_t timer = timer_get();
-    game->randomIndex = ((timer*1103515245 + 12345)/65536)%4;
+    game->randomIndex = timer % 4;
     game->numarrows += 1;
     game->arrow = arrows[game->randomIndex];
 }
@@ -159,6 +159,7 @@ int main (void)
         if (counter == 0) {
             switch_arrow(&game);
         }
+
         if (task == 0) {        // first arrow
             display_arrow(game.arrow, 0);
         } else if (task == 1) { // second arrow
