@@ -8,6 +8,7 @@
 #include "task.h"
 #include "ir_uart.h"
 #include "display.h"
+#include "draw.h"
 
 #define DISP_HZ 500
 #define GAME_SIZE 20
@@ -49,9 +50,9 @@ void switch_arrow(game_info* game)
 int main (void)
 {
     char character = '1';
-    //char speed = '1';
+    char speed = '1';
     system_init ();
-    //ir_uart_init ();
+    ir_uart_init ();
     navswitch_init ();
     timer_init();
     tinygl_init(DISP_HZ);
@@ -77,10 +78,18 @@ int main (void)
                 character = '5';
             }
         }
-        display_character (character);
+        display_char(character);
         if (navswitch_push_event_p (NAVSWITCH_PUSH)) {
+            if (ir_uart_write_ready_p()) {
+                ir_uart_putc(speed);
+                loop_check += 1;
+            }
+        }
+        if (ir_uart_read_ready_p()) {
+            speed = ir_uart_getc();
             loop_check += 1;
         }
+
     }
 
     tinygl_clear();

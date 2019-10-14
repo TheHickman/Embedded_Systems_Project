@@ -3,7 +3,6 @@
 #include "pacer.h"
 #include "navswitch.h"
 #include "system.h"
-#include "draw.h"
 
 void display_character (char character)
 {

@@ -22,14 +22,14 @@
 void display_char(char c);
 
 /**Displays a message and waits for a button press
-@param pointer to a message to display
-*/
-void display_mess (char* message);
-
-/**Displays a message and waits for a button press
 @param char letter of arrow correspondnig with direciton to display
 @param int is how far up the board to diplay the arrow.
 */
 void display_arrow(char direction, int count);
+
+/**Displays a message and waits for a button press
+@param pointer to a message to display
+*/
+void display_mess (char* message);
 
 #endif
