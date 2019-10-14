@@ -1,3 +1,10 @@
+/*
+    File     draw.h
+    Authors  Henry Hickman, Taran Jennison
+    Date     14 October 2019
+    Brief    Main c file for the game
+*/
+
 #include "system.h"
 #include "tinygl.h"
 #include "../fonts/font5x7_1.h"
@@ -15,10 +22,8 @@
 
 typedef struct important {
     char arrow;
-    int display;
-    int count;
     int randomIndex;
-    int numarrows;
+    uint8_t numarrows;
     int score;
 } game_info;
 
@@ -40,9 +45,8 @@ int get_score(int count)
 void switch_arrow(game_info* game)
 {
     char arrows[4] = {'R', 'L', 'D', 'U'};
-
-    timer_tick_t timer = timer_get();
-    game->randomIndex = timer % 4;
+	timer_tick_t timer = timer_get();
+    game->randomIndex = (game->randomIndex + (timer * 11245 + 12345)) % 4;
     game->numarrows += 1;
     game->arrow = arrows[game->randomIndex];
 }
@@ -92,10 +96,10 @@ int main (void)
     }
 
     tinygl_clear();
-    game_info game = {'U', 0, 0, 0, 45, 0};
+    game_info game = {'U', 0, 45, 0};
     uint16_t counter = 0;
     int task = 0;
-    int how_many_arrows = 0;
+    uint8_t how_many_arrows = 0;
 
     while (how_many_arrows < 15) {
 
@@ -108,6 +112,7 @@ int main (void)
 
         if (counter == 0) {
             switch_arrow(&game);
+            how_many_arrows += 1;
         }
 
         if (task == 0) {        // first arrow

@@ -1,8 +1,8 @@
 /*
     File     draw.h
     Authors  Henry Hickman, Taran Jennison
-    Date     15 October 2017
-    Brief    Utilities for the PSR game.
+    Date     14 October 2019
+    Brief    H file for drawing on the ciruct board
 */
 
 

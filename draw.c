@@ -1,3 +1,10 @@
+/*
+    File     draw.c
+    Authors  Henry Hickman, Taran Jennison
+    Date     14 October 2019
+    Brief    C file for displaying on LED Matrix
+*/
+
 #include "tinygl.h"
 #include "../fonts/font5x7_1.h"
 #include "pacer.h"
@@ -53,7 +60,7 @@ void display_mess (char* message)
     uint8_t counter = 0;
     tinygl_text_mode_set (TINYGL_TEXT_MODE_SCROLL);
     tinygl_text(message);
-    while(counter == 0) {
+    while(counter == 0) { //WIll not leave until button is pressed
         pacer_wait();
         navswitch_update ();
         tinygl_update();
