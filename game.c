@@ -49,7 +49,6 @@ void switch_arrow(game_info* game)
 
 int main (void)
 {
-    char character = '1';
     char speed = '1';
     system_init ();
     ir_uart_init ();
@@ -67,25 +66,25 @@ int main (void)
         tinygl_update ();
         navswitch_update();
         if (navswitch_push_event_p (NAVSWITCH_NORTH)) {
-            character += 1;
-            if (character > '5') {
-                character = '1';
+            speed += 1;
+            if (speed > '5') { //Looping through 1-5
+                speed = '1';
             }
         }
         if (navswitch_push_event_p (NAVSWITCH_SOUTH)) {
-            character -= 1;
-            if (character < '1') {
-                character = '5';
+            speed -= 1;
+            if (speed < '1') { //Ensuring it loops
+                speed = '5';
             }
         }
-        display_char(character);
-        if (navswitch_push_event_p (NAVSWITCH_PUSH)) {
+        display_char(speed);
+        if (navswitch_push_event_p (NAVSWITCH_PUSH)) { //First person to press decides speed
             if (ir_uart_write_ready_p()) {
                 ir_uart_putc(speed);
                 loop_check += 1;
             }
         }
-        if (ir_uart_read_ready_p()) {
+        if (ir_uart_read_ready_p()) { //If you didn't decide speed this calls
             speed = ir_uart_getc();
             loop_check += 1;
         }
