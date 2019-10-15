@@ -58,7 +58,7 @@ int get_score(uint16_t count, game_info* game)
     } else {
         score = gap - pre_score; //scale score by gap so scores are consistant across speeds?
     }
-
+    score = score * (1000/gap);
     return score;
 }
 
@@ -68,6 +68,80 @@ void switch_arrow(game_info* game)
     timer_tick_t timer = timer_get();
     game->randomIndex = (game->randomIndex + (timer * 11245 + 12345)) % 4;
     game->arrow = arrows[game->randomIndex];
+}
+
+void send_byte(int byte)
+{
+    uint8_t sent = 0;
+    uint8_t ACK = 0;
+    while (sent == 0) {
+        if (ir_uart_write_ready_p()) {
+            ir_uart_putc(byte);
+            while (ACK == 0) {
+                if (ir_uart_read_ready_p()) {
+                    ACK = ir_uart_getc();
+                }
+            }
+            sent++;
+        }
+    }
+}
+
+void send_score(game_info* game)
+{
+    uint8_t sent = 0;
+    while (sent < 2) {
+        send_byte(game->score);
+        game->score = game->score >> 8;
+        sent++;
+    }
+}
+
+int recv_byte()
+{
+    uint8_t recv = 0;
+    int recv_byte = 0;
+    while (recv == 0) {
+        if (ir_uart_read_ready_p()) {
+            recv_byte = ir_uart_getc();
+            recv++;
+        }
+    }
+    uint8_t sent_ACK = 0;
+    uint8_t ACK = 15;   //15 to reduce possibility of bit errors causing problems
+    while (sent_ACK == 0) {
+        if (ir_uart_write_ready_p()) {
+            ir_uart_putc(ACK);
+            sent_ACK++;
+        }
+    }
+    return recv_byte;
+}
+
+int recv_score()
+{
+    uint8_t count = 0;
+    int recvd_score = 0;
+    int ply2_score = 0;
+    while (count < 2) {
+        recvd_score = recv_byte();
+        ply2_score = (recvd_score << 8*count) + ply2_score;
+        count++;
+    }
+    return ply2_score;
+}
+
+int get_winner(game_info* game, int ply1_score)
+{
+    int won;
+    if (game->score > ply1_score) {
+        won = 1;
+    } else if (game->score < ply1_score) {
+        won = 0;
+    } else {
+        won = 5;
+    }
+    return won;
 }
 
 int main (void)
@@ -168,61 +242,30 @@ int main (void)
         display_mess (sNum);
         tinygl_clear();
     }
-    if (p1status == 1) {
-    	if (ir_uart_write_ready_p()) {
-        	ir_uart_putc(game.score);
-    	}
-    }
-    uint8_t recieved = 0;
+
     uint8_t won = 0;
-    uint8_t p1score = 0;
-    if (p1status == 0) {
-    	while (recieved < 1) {
-    		if (ir_uart_read_ready_p()) {
-        		p1score = ir_uart_getc();
-        		recieved += 1;
-    		}
-    	}	
-		if (game.score > p1score) {
-    		won = 1;
-    	}
-   		else if (game.score < p1score) { 
-   			won = 0;
-   		}
-   		else {
-   			won = 5;
-   		}
-   		if (ir_uart_write_ready_p()) {
-   			ir_uart_putc(won);
-   		}
-   	}
-   	if (p1status == 1) {
-   		recieved = 0;
-   		while (recieved == 0) {
-   			if (ir_uart_read_ready_p()) {
-   				won = ir_uart_getc();
-   				recieved += 1;
-   			}
-   		}
-   		if (won == 1) {
-   			display_mess("Loser");
-   		}
-   		else if (won == 0) {
-   			display_mess("Winner");
-   		}
-   		else {
-   			display_mess("Draw");
-   		}
-   	}
-   	if (p1status == 0) {
-   		if (won == 1) {
-   			display_mess("Winner");
-   		}
-   		else if (won == 0) {
-   			display_mess("Loser");
-   		}
-   		else {
-   			display_mess("Draw");
-   		}
-   	}
+    // Send score from ply1 to ply2
+    if (p1status == 1) {    //if p1
+        send_score(&game);
+        won = recv_byte();
+        // invert won to reflect result
+        if (won == 1) {
+            won = 0;
+        } else if (won == 0) {
+            won == 1;
+        }
+    } else {                //if p2
+        int ply1_score = 0;
+        ply1_score = recv_score();
+        won = get_winner(&game, ply1_score);
+        send_byte(won);
+    }
+    //disp win stat
+    if (won == 1) {
+        display_mess("Loser");
+    } else if (won == 0) {
+        display_mess("Winner");
+    } else {
+        display_mess("Draw");
+    }
 }
