@@ -84,6 +84,7 @@ int main (void)
     pacer_init(DISP_HZ);
     display_mess("SELECT A SPEED");
     uint8_t loop_check = 0;
+    uint8_t p1status = 0;
     while (loop_check == 0) {
         pacer_wait();
         tinygl_update ();
@@ -106,6 +107,7 @@ int main (void)
             if (ir_uart_write_ready_p()) {
                 ir_uart_putc(speed);
                 loop_check += 1;
+                p1status = 1;
             }
         }
         if (ir_uart_read_ready_p()) { //If you didn't decide speed this calls
@@ -166,10 +168,61 @@ int main (void)
         display_mess (sNum);
         tinygl_clear();
     }
-
-    //Comunicate score
-
-    //Get winner
-
-    //Display result
+    if (p1status == 1) {
+    	if (ir_uart_write_ready_p()) {
+        	ir_uart_putc(game.score);
+    	}
+    }
+    uint8_t recieved = 0;
+    uint8_t won = 0;
+    uint8_t p1score = 0;
+    if (p1status == 0) {
+    	while (recieved < 1) {
+    		if (ir_uart_read_ready_p()) {
+        		p1score = ir_uart_getc();
+        		recieved += 1;
+    		}
+    	}	
+		if (game.score > p1score) {
+    		won = 1;
+    	}
+   		else if (game.score < p1score) { 
+   			won = 0;
+   		}
+   		else {
+   			won = 5;
+   		}
+   		if (ir_uart_write_ready_p()) {
+   			ir_uart_putc(won);
+   		}
+   	}
+   	if (p1status == 1) {
+   		recieved = 0;
+   		while (recieved == 0) {
+   			if (ir_uart_read_ready_p()) {
+   				won = ir_uart_getc();
+   				recieved += 1;
+   			}
+   		}
+   		if (won == 1) {
+   			display_mess("Loser");
+   		}
+   		else if (won == 0) {
+   			display_mess("Winner");
+   		}
+   		else {
+   			display_mess("Draw");
+   		}
+   	}
+   	if (p1status == 0) {
+   		if (won == 1) {
+   			display_mess("Winner");
+   		}
+   		else if (won == 0) {
+   			display_mess("Loser");
+   		}
+   		else {
+   			display_mess("Draw");
+   		}
+   	}
 }
