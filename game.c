@@ -28,6 +28,7 @@ typedef struct important {
     int score;
     uint16_t time_gap;
     uint16_t total_time_loop;
+    uint8_t p1status;
 } game_info;
 
 int check_input(game_info* game)
@@ -70,95 +71,34 @@ void switch_arrow(game_info* game)
     game->arrow = arrows[game->randomIndex];
 }
 
-void send_byte(int byte)
-{
-    uint8_t sent = 0;
-    uint8_t ACK = 0;
-    while (sent == 0) {
-        if (ir_uart_write_ready_p()) {
-            ir_uart_putc(byte);
-            while (ACK == 0) {
-                if (ir_uart_read_ready_p()) {
-                    ACK = ir_uart_getc();
-                }
-            }
-            sent++;
-        }
-    }
-}
-
-void send_score(game_info* game)
-{
-    uint8_t sent = 0;
-    while (sent < 2) {
-        send_byte(game->score);
-        game->score = game->score >> 8;
-        sent++;
-    }
-}
-
-int recv_byte()
-{
-    uint8_t recv = 0;
-    int recv_byte = 0;
-    while (recv == 0) {
-        if (ir_uart_read_ready_p()) {
-            recv_byte = ir_uart_getc();
-            recv++;
-        }
-    }
-    uint8_t sent_ACK = 0;
-    uint8_t ACK = 15;   //15 to reduce possibility of bit errors causing problems
-    while (sent_ACK == 0) {
-        if (ir_uart_write_ready_p()) {
-            ir_uart_putc(ACK);
-            sent_ACK++;
-        }
-    }
-    return recv_byte;
-}
-
-int recv_score()
-{
-    uint8_t count = 0;
-    int recvd_score = 0;
-    int ply2_score = 0;
-    while (count < 2) {
-        recvd_score = recv_byte();
-        ply2_score = (recvd_score << 8*count) + ply2_score;
-        count++;
-    }
-    return ply2_score;
-}
-
 int get_winner(game_info* game, int ply1_score)
+//calculated if ply2
 {
     int won;
-    if (game->score > ply1_score) {
-        won = 1;
-    } else if (game->score < ply1_score) {
+    if (game->score/256 > ply1_score) {
+        won = 15;
+    } else if (game->score/256 < ply1_score) {
         won = 0;
     } else {
-        won = 5;
+        won = 8;
     }
     return won;
 }
 
-int main (void)
+void wait(int ticks)
 {
-    char speed = '1';
-    system_init ();
-    ir_uart_init ();
-    navswitch_init ();
-    timer_init();
-    tinygl_init(DISP_HZ);
-    tinygl_font_set(&font5x7_1);
-    tinygl_text_speed_set(20);
+    int count_recv = 0;
+    while (count_recv < ticks) {
+        pacer_wait();
+        count_recv++;
+    }
+}
 
-    pacer_init(DISP_HZ);
-    display_mess("SELECT A SPEED");
+void select_speed(game_info* game)
+{
+    navswitch_update();
+    char speed = '1';
     uint8_t loop_check = 0;
-    uint8_t p1status = 0;
     while (loop_check == 0) {
         pacer_wait();
         tinygl_update ();
@@ -181,7 +121,7 @@ int main (void)
             if (ir_uart_write_ready_p()) {
                 ir_uart_putc(speed);
                 loop_check += 1;
-                p1status = 1;
+                game->p1status = 1;
             }
         }
         if (ir_uart_read_ready_p()) { //If you didn't decide speed this calls
@@ -191,18 +131,39 @@ int main (void)
 
     }
     tinygl_clear();
+    game->time_gap = 75 * (6-(speed-49));
+    game->total_time_loop = 3 * game->time_gap;
+}
+
+int main (void)
+{
+    system_init ();
+    ir_uart_init ();
+    navswitch_init ();
+    timer_init();
+    tinygl_init(DISP_HZ);
+    tinygl_font_set(&font5x7_1);
+    tinygl_text_speed_set(20);
+
+    game_info game = {'U', 0, 0, 0, 0, 0};
+
+    pacer_init(DISP_HZ);
+    display_mess("SELECT A SPEED");
+    tinygl_clear();
+    wait(50);
+    navswitch_update();
+
+    select_speed(&game);
+    wait(50);
 
     //Init stuff for game
-    game_info game = {'U', 0, 0, 0, 0};
     uint16_t counter = 0;
-    game.time_gap = 75 * (6-(speed-49));
-    game.total_time_loop = 3 * game.time_gap;
     int task = 0;
     uint8_t how_many_arrows = 0;
 
 
     //main gameplay loop (maybe seperate to somewhere else?)
-    while (how_many_arrows < 15) {
+    while (how_many_arrows < 5) {
 
         pacer_wait();
         counter = (counter + 1) % game.total_time_loop;
@@ -232,40 +193,62 @@ int main (void)
 
     }
 
-    //Display score
-    if (game.score == 0) {
-        display_mess ("zero");
-    } else {
-        char sNum[10];
-        itoa(game.score, sNum, 10);
-        sNum[9] = '\0';
-        display_mess (sNum);
-        tinygl_clear();
+    tinygl_clear();
+    //send score if p1
+    if (game.p1status == 1) {
+        if (ir_uart_write_ready_p()) {
+            ir_uart_putc(game.score/256);
+        }
+    }
+    uint8_t recieved = 0;
+    uint8_t won = 0;
+    uint8_t p1score = 0;
+    if (game.p1status == 0) {
+        while (recieved < 1) {
+            if (ir_uart_read_ready_p()) {
+                p1score = ir_uart_getc();
+                recieved += 1;
+            }
+        }
+        won = get_winner(&game, p1score);
+
+        if (ir_uart_write_ready_p()) {
+            ir_uart_putc(won);
+        }
+    }
+    if (game.p1status == 1) {
+        wait(100);
+        recieved = 0;
+        while (recieved == 0) {
+            if (ir_uart_read_ready_p()) {
+                won = ir_uart_getc();
+                recieved += 1;
+            }
+        }
+        if (won == 15) {
+            display_mess("Loser");
+        }
+        else if (won == 0) {
+            display_mess("Winner");
+        }
+        else if (won == 8) {
+            display_mess("Draw");
+        } else {
+            display_mess("Error");
+        }
+    }
+    if (game.p1status == 0) {
+        if (won == 15) {
+            display_mess("Winner");
+        }
+        else if (won == 0) {
+            display_mess("Loser");
+        }
+        else if (won == 8) {
+            display_mess("Draw");
+        } else {
+            display_mess("Error");
+        }
     }
 
-    uint8_t won = 0;
-    // Send score from ply1 to ply2
-    if (p1status == 1) {    //if p1
-        send_score(&game);
-        won = recv_byte();
-        // invert won to reflect result
-        if (won == 1) {
-            won = 0;
-        } else if (won == 0) {
-            won == 1;
-        }
-    } else {                //if p2
-        int ply1_score = 0;
-        ply1_score = recv_score();
-        won = get_winner(&game, ply1_score);
-        send_byte(won);
-    }
-    //disp win stat
-    if (won == 1) {
-        display_mess("Loser");
-    } else if (won == 0) {
-        display_mess("Winner");
-    } else {
-        display_mess("Draw");
-    }
 }
