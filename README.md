@@ -49,7 +49,7 @@ The game can then be played again by pushing the joystick in/down.
 Scoring is calculated based on how close the users input is to the time when the arrow reaches the top.
 A perfect score for an arrow would be to push the joystick in the correct direction at the same frame that the arrow apears at the top of the display.
 The the bigger the difference in timing between the user input and the apearance of the top arrow, the smaller the score.
-A score can ONLY be registered when the arrow is in the middle or the top positions.
+A score can only be registered when the arrow is in the middle or the top positions.
     This means that a score can be registered at any time when the arrow is in the middle or top positions.
     Note: The a score can only be registered once per arrow so don't spam or try to get in too early.
     
