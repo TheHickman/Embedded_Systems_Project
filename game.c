@@ -101,7 +101,9 @@ void wait(int ticks)
 
 void select_speed(game_info* game)
 {
-    char speed = '1';
+    char speed_char = '1';
+    int speed = 1;
+    uint16_t counter = 0;
     uint8_t loop_check = 0;
     while (loop_check == 0) {
         pacer_wait();
@@ -109,35 +111,66 @@ void select_speed(game_info* game)
         navswitch_update();
 
         if (navswitch_push_event_p (NAVSWITCH_NORTH)) {
-            speed += 1;
-            if (speed > '5') { //Looping through 1-5
-                speed = '1';
+            speed_char++;
+            speed++;
+            if (speed_char > '5') { //Looping through 1-5
+                speed_char = '1';
+                speed = 1;
             }
         }
         if (navswitch_push_event_p (NAVSWITCH_SOUTH)) {
-            speed -= 1;
-            if (speed < '1') { //Ensuring it loops
-                speed = '5';
+            speed_char--;
+            speed--;
+            if (speed_char < '1') { //Ensuring it loops
+                speed_char = '5';
+                speed = 5;
             }
-        }
-        display_char(speed);
-        if (navswitch_push_event_p (NAVSWITCH_PUSH)) { //First person to press decides speed
-            if (ir_uart_write_ready_p()) {
-                ir_uart_putc(speed);
-                loop_check += 1;
-                game->p1status = 1;
-            }
-        }
-        if (ir_uart_read_ready_p()) { //If you didn't decide speed this calls
-            speed = ir_uart_getc();
-            loop_check += 1;
         }
 
+        display_char(speed_char);
+
+        if (counter > 300) {    //force wait to confirm speed
+            if (navswitch_push_event_p (NAVSWITCH_PUSH)) { //First person to press decides speed
+                if (ir_uart_write_ready_p()) {
+                    ir_uart_putc(speed);
+                    loop_check += 1;
+                    game->p1status = 1;
+                }
+            } else if (ir_uart_read_ready_p()) { //If you didn't decide speed this calls
+                speed = ir_uart_getc();
+                loop_check += 1;
+            }
+        }
+        counter++;
     }
     tinygl_clear();
     //set time gap and total time loop
-    game->time_gap = 75 * (6-(speed-49));
+    game->time_gap = 75 * (6-speed);
     game->total_time_loop = 3 * game->time_gap;
+}
+
+int recv(void)
+{
+    uint8_t recieved = 0;
+    int val = 0;
+    while (recieved < 1) {
+        if (ir_uart_read_ready_p()) {
+            val = ir_uart_getc();
+            recieved = 1;
+        }
+    }
+    return val;
+}
+
+void send(char sender)
+{
+    uint8_t sent = 0;
+    while (sent < 1) {
+        if (ir_uart_write_ready_p()) {
+            ir_uart_putc(sender);
+            sent = 1;
+        }
+    }
 }
 
 int main (void)
@@ -189,17 +222,11 @@ int main (void)
             task = (task + 1) % 3;
         }
 
-        //task 0 (first arrow)
-        if (task == 0) {
-            display_arrow(game.arrow, 0);
-        } else if (task == 1) { //task 1 (second arrow + input)
-            display_arrow(game.arrow, 1);
-            if (game.switched == 0) {
-                if (check_input(&game)) {
-                    game.score += get_score(counter, &game);
-                }
-            }
-        } else if (task == 2) { //task 2 (third arrow + input)
+        //display arrow for current task
+        display_arrow(game.arrow, task);
+
+        //check score when in task 1 & 2
+        if (task > 0) {
             if (game.switched == 0) {
                 if (check_input(&game)) {
                     game.score += get_score(counter, &game);
@@ -214,54 +241,38 @@ int main (void)
 
     //send score if p1
     if (game.p1status == 1) {
-        if (ir_uart_write_ready_p()) {
-            ir_uart_putc(game.score/256);
-        }
+        send(game.score/250);
     }
 
     //init values for send/recv of score
-    uint8_t recieved = 0;
-    uint8_t won = 0;
-    uint8_t p1score = 0;
 
+    uint8_t winner_flag = 0;
+    uint8_t p1score = 0;
     //if p2
     if (game.p1status == 0) {
-        //while not recvd
-        while (recieved < 1) {
-            if (ir_uart_read_ready_p()) {
-                p1score = ir_uart_getc();
-                recieved += 1;
-            }
-        }
+        //get p1 score
+        p1score = recv();
+
         //set winner logic val
-        won = get_winner(&game, p1score);
+        winner_flag = get_winner(&game, p1score);
 
         //send winner logic val
-        if (ir_uart_write_ready_p()) {
-            ir_uart_putc(won);
-        }
+        send(winner_flag);
     }
 
     //if p1
     if (game.p1status == 1) {
         //wait 100 ticks to give p2 time to win logic val
         wait(100);
-        recieved = 0;
         //while not recvd
-        while (recieved < 1) {
-            if (ir_uart_read_ready_p()) {
-                won = ir_uart_getc();
-                recieved += 1;
-            }
-        }
+        winner_flag = recv();
+
         //Display win result
-        if (won == 15) {
+        if (winner_flag == 15) {
             display_mess("Loser");
-        }
-        else if (won == 0) {
+        } else if (winner_flag == 0) {
             display_mess("Winner");
-        }
-        else if (won == 8) {
+        } else if (winner_flag == 8) {
             display_mess("Draw");
         } else {
             display_mess("Error");
@@ -269,13 +280,11 @@ int main (void)
     }
     if (game.p1status == 0) {   //if p2
         //Display win result
-        if (won == 15) {
+        if (winner_flag == 15) {
             display_mess("Winner");
-        }
-        else if (won == 0) {
+        } else if (winner_flag == 0) {
             display_mess("Loser");
-        }
-        else if (won == 8) {
+        } else if (winner_flag == 8) {
             display_mess("Draw");
         } else {
             display_mess("Error");
