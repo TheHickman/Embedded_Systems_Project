@@ -13,6 +13,7 @@
 #include "tinygl.h"
 #include "pacer.h"
 #include "draw.h"
+#include "communication.h"
 
 int get_score(uint16_t count, game_info* game)
 {
@@ -102,19 +103,17 @@ void select_speed(game_info* game)
 
         display_char(speed_char);
 
-        if (counter > 300) {    //force wait to confirm speed
+        if (counter++ > 300) {    //force wait to confirm speed
             if (navswitch_push_event_p (NAVSWITCH_PUSH)) { //First person to press decides speed
-                if (ir_uart_write_ready_p()) {
-                    ir_uart_putc(speed);
-                    loop_check += 1;
-                    game->p1status = 1;
-                }
-            } else if (ir_uart_read_ready_p()) { //If you didn't decide speed this calls
-                speed = ir_uart_getc();
+                send(speed);
                 loop_check += 1;
-            }
+                game->p1status = 1;
+            }else if (ir_uart_read_ready_p()) { //If you didn't decide speed this calls
+            speed = recv();
+            loop_check += 1;
         }
-        counter++;
+        } 
+        //counter++;
     }
     tinygl_clear();
     //set time gap and total time loop

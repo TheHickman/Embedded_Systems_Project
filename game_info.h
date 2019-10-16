@@ -18,7 +18,7 @@
 
 typedef struct game_info {
     char arrow;                 //what arrow the game is currently on
-    int randomIndex;            //"random" number used to "randomise" arrow choice
+   	int randomIndex;            //"random" number used to "randomise" arrow choice
     int score;                  //score on this UCFK
     uint16_t time_gap;          //number of ticks per task/arrow position
     uint16_t total_time_loop;   //number of ticks per arrow (ie how often arrow is changed)
