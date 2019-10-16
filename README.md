@@ -1,3 +1,16 @@
+Henry Hickman (hjh60) and Taran Jennison (tmj49) ENCE260 Project. 
+
+Step 1: Open terminal in the group422 directory 
+            -OR-
+        Open terminal and navigate to the group442 directory
+Step 2: run "make clean"
+Step 3: run "make program"
+Step 4: Both players must adavance past the select speed menu before selecting a speed
+Step 5: One player picks a speed
+Step 6: Press the  joystick in the right direciton on the third arrow flash (arrow at top of screen)
+Step 7: Highest score wins
+Step 8: Press the mid button to play again. Repeat for fun. 
+
 -- Starting the game --
 Once the game has been flashed onto both UCFKs a scroll message prompting the user to select the speed will be displayed
 The user must push the joystick in/down to proceed to speed selection
@@ -18,7 +31,7 @@ This loop is reapeated until the arrow count reaches the pre determined game len
 Once This count has been reached the scores are compaired and a winner is calculated
 Each UCFK then displays if it is the winner, loser or if it was a draw
 
-The game can then be played again if the user so desires
+The game can then be played again by pushing the joystick in/down
 
 -- Technical tips for scoring and speed --
 Scoring is calculated based on how close the users input is to the time when the arrow reaches the top
