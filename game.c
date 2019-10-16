@@ -23,12 +23,13 @@
 #define GAME_SIZE 20
 
 typedef struct important {
-    char arrow;
-    int randomIndex;
-    int score;
-    uint16_t time_gap;
-    uint16_t total_time_loop;
-    uint8_t p1status;
+    char arrow;                 //what arrow the game is currently on
+    int randomIndex;            //"random" number used to "randomise" arrow choice
+    int score;                  //score on this UCFK
+    uint16_t time_gap;          //number of ticks per task/arrow position
+    uint16_t total_time_loop;   //number of ticks per arrow (ie how often arrow is changed)
+    uint8_t p1status;           //flag for player number. 0 for p2, 1 for p1
+    uint8_t switched;           //flag to prevent scoring multiple times off one arrow
 } game_info;
 
 int check_input(game_info* game)
@@ -36,12 +37,16 @@ int check_input(game_info* game)
     navswitch_update();
     int out = 0;
     if (navswitch_push_event_p (NAVSWITCH_NORTH) && game->arrow == 'U') {
+        game->switched = 1;
         out = 1;
     } else if (navswitch_push_event_p (NAVSWITCH_SOUTH) && game->arrow == 'D') {
+        game->switched = 1;
         out = 1;
     } else if (navswitch_push_event_p (NAVSWITCH_EAST) && game->arrow == 'R') {
+        game->switched = 1;
         out = 1;
     } else if (navswitch_push_event_p (NAVSWITCH_WEST) && game->arrow == 'L') {
+        game->switched = 1;
         out = 1;
     }
     return out;
@@ -96,7 +101,6 @@ void wait(int ticks)
 
 void select_speed(game_info* game)
 {
-    navswitch_update();
     char speed = '1';
     uint8_t loop_check = 0;
     while (loop_check == 0) {
@@ -131,12 +135,14 @@ void select_speed(game_info* game)
 
     }
     tinygl_clear();
+    //set time gap and total time loop
     game->time_gap = 75 * (6-(speed-49));
     game->total_time_loop = 3 * game->time_gap;
 }
 
 int main (void)
 {
+    //init system stuff
     system_init ();
     ir_uart_init ();
     navswitch_init ();
@@ -145,7 +151,8 @@ int main (void)
     tinygl_font_set(&font5x7_1);
     tinygl_text_speed_set(20);
 
-    game_info game = {'U', 0, 0, 0, 0, 0};
+    //init game_info
+    game_info game = {'U', 0, 0, 0, 0, 0, 0};
 
     pacer_init(DISP_HZ);
     display_mess("SELECT A SPEED");
@@ -153,6 +160,7 @@ int main (void)
     wait(50);
     navswitch_update();
 
+    //get speed
     select_speed(&game);
     wait(50);
 
@@ -163,68 +171,90 @@ int main (void)
 
 
     //main gameplay loop (maybe seperate to somewhere else?)
-    while (how_many_arrows < 5) {
+    while (how_many_arrows < 15) {
 
         pacer_wait();
-        counter = (counter + 1) % game.total_time_loop;
 
+        //counter logic
+        counter = (counter + 1) % game.total_time_loop;
+        //resultant counter logic
+        if (counter == 0) {
+            switch_arrow(&game);
+            how_many_arrows += 1;
+            game.switched = 0;
+        }
+
+        //task logic
         if (counter%game.time_gap == 0) {
             task = (task + 1) % 3;
         }
 
-        if (counter == 0) {
-            switch_arrow(&game);
-            how_many_arrows += 1;
-        }
-
-        if (task == 0) {        // first arrow
+        //task 0 (first arrow)
+        if (task == 0) {
             display_arrow(game.arrow, 0);
-        } else if (task == 1) { // second arrow
+        } else if (task == 1) { //task 1 (second arrow + input)
             display_arrow(game.arrow, 1);
-            if (check_input(&game)) {
-                game.score += get_score(counter, &game);
+            if (game.switched == 0) {
+                if (check_input(&game)) {
+                    game.score += get_score(counter, &game);
+                }
             }
-        } else if (task == 2) { // input
-            display_arrow(game.arrow, 2);
-            if (check_input(&game)) {
-                game.score += get_score(counter, &game);
+        } else if (task == 2) { //task 2 (third arrow + input)
+            if (game.switched == 0) {
+                if (check_input(&game)) {
+                    game.score += get_score(counter, &game);
+                }
             }
         }
-
+        //while loop end
     }
+    //end of main game loop
 
     tinygl_clear();
+
     //send score if p1
     if (game.p1status == 1) {
         if (ir_uart_write_ready_p()) {
             ir_uart_putc(game.score/256);
         }
     }
+
+    //init values for send/recv of score
     uint8_t recieved = 0;
     uint8_t won = 0;
     uint8_t p1score = 0;
+
+    //if p2
     if (game.p1status == 0) {
+        //while not recvd
         while (recieved < 1) {
             if (ir_uart_read_ready_p()) {
                 p1score = ir_uart_getc();
                 recieved += 1;
             }
         }
+        //set winner logic val
         won = get_winner(&game, p1score);
 
+        //send winner logic val
         if (ir_uart_write_ready_p()) {
             ir_uart_putc(won);
         }
     }
+
+    //if p1
     if (game.p1status == 1) {
+        //wait 100 ticks to give p2 time to win logic val
         wait(100);
         recieved = 0;
-        while (recieved == 0) {
+        //while not recvd
+        while (recieved < 1) {
             if (ir_uart_read_ready_p()) {
                 won = ir_uart_getc();
                 recieved += 1;
             }
         }
+        //Display win result
         if (won == 15) {
             display_mess("Loser");
         }
@@ -237,7 +267,8 @@ int main (void)
             display_mess("Error");
         }
     }
-    if (game.p1status == 0) {
+    if (game.p1status == 0) {   //if p2
+        //Display win result
         if (won == 15) {
             display_mess("Winner");
         }
