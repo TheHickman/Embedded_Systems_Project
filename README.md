@@ -24,10 +24,10 @@ The game can then be played again if the user so desires
 Scoring is calculated based on how close the users input is to the time when the arrow reaches the top
 A perfect score for an arrow would be to push the joystick in the correct direction at the same frame that the arrow apears at the top of the display
 A score can only be registered when the arrow is in the middle or the top positions
-    This means that a score can be registered at any time the arrow is in the middle or top positions
+    This means that a score can be registered at any time when the arrow is in the middle or top positions
     Note: The a score can only be registered once per arrow so don't spam or try to get in too early
     
-Speed:
+Speed chart:
 1 = 0.625 s per position for 1.875 s per arrow cycle
 2 = 0.500 s per position for 1.500 s per arrow cycle
 3 = 0.375 s per position for 1.255 s per arrow cycle
