@@ -1,6 +1,6 @@
 Henry Hickman (hjh60) and Taran Jennison (tmj49) ENCE260 Project. 
 
-Step 1: Open terminal in the group422 directory \n
+Step 1: Open terminal in the group422 directory
             -OR-
         Open terminal and navigate to the group442 directory
 Step 2: run "make clean"
