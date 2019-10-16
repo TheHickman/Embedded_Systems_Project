@@ -10,7 +10,6 @@
 #include "../fonts/font5x7_1.h"
 #include "pacer.h"
 #include "navswitch.h"
-#include "ledmat.h"
 #include "timer.h"
 #include "task.h"
 #include "ir_uart.h"
