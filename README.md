@@ -22,6 +22,7 @@ Step 8: Press the mid button to play again. Repeat for fun.
 
 
 -- Starting the game --
+
 Once the game has been flashed onto both UCFKs a scroll message prompting the user to select the speed will be displayed.
 The user must push the joystick in/down to proceed to speed selection.
 Speed is selected on a scale of 1-5 and this can be cycled by pushing the joystick up or down (1 is the slowest and 5 is the fastest.)
@@ -29,6 +30,7 @@ Once the user has selected the speed they want they must confirm this by pushing
 This will start the game for both users.
 
 -- Playing the game --
+
 The game follows a basic game play loop for a set count (15 by default).
 1) A random arrow direction is selected.
 2) The arrow will be displayed on the LED matrix moving from the bottom to the top.
@@ -43,6 +45,7 @@ Each UCFK then displays if it is the winner, loser or if it was a draw.
 The game can then be played again by pushing the joystick in/down.
 
 -- Technical tips for scoring and speed --
+
 Scoring is calculated based on how close the users input is to the time when the arrow reaches the top.
 A perfect score for an arrow would be to push the joystick in the correct direction at the same frame that the arrow apears at the top of the display.
 A score can only be registered when the arrow is in the middle or the top positions.
