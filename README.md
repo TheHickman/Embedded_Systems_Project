@@ -26,7 +26,7 @@ Step 8: Press the mid button to play again. Repeat for fun.
 Once the game has been flashed onto both UCFKs a scroll message prompting the user to select the speed will be displayed.
 The user must push the joystick in/down to proceed to speed selection.
 Speed is selected on a scale of 1-5 and this can be cycled by pushing the joystick up or down (1 is the slowest and 5 is the fastest.)
-Once the user has selected the speed they want they must confirm this by pushing the joystick down/in.
+Once a user has selected the speed they want they must confirm this by pushing the joystick down/in.
 This will start the game for both users.
 
 -- Playing the game --
