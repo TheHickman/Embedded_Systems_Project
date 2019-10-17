@@ -28,6 +28,9 @@ system.o: ../../drivers/avr/system.c ../../drivers/avr/system.h
 timer.o: ../../drivers/avr/timer.c ../../drivers/avr/system.h ../../drivers/avr/timer.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
+ledmat.o: ../../drivers/ledmat.c ../../drivers/avr/pio.h ../../drivers/avr/system.h ../../drivers/ledmat.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
 display.o: ../../drivers/display.c ../../drivers/avr/system.h ../../drivers/display.h ../../drivers/ledmat.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
@@ -73,7 +76,7 @@ prescale.o: ../../drivers/avr/prescale.c ../../drivers/avr/prescale.h ../../driv
 
 
 # Link: create ELF output file from object files.
-game.out: game.o pio.o system.o timer.o display.o navswitch.o font.o pacer.o tinygl.o task.o ir_uart.o timer0.o usart1.o prescale.o draw.o game_info.o communication.o
+game.out: game.o pio.o system.o timer.o display.o navswitch.o font.o pacer.o tinygl.o task.o ir_uart.o timer0.o usart1.o prescale.o draw.o game_info.o communication.o ledmat.o
 	$(CC) $(CFLAGS) $^ -o $@ -lm
 	$(SIZE) $@
 

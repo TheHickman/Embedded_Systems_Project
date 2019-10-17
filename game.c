@@ -19,6 +19,7 @@
 #include "stdlib.h"
 #include "game_info.h"
 #include "communication.h"
+#include "ledmat.h"
 
 #define DISP_HZ 600
 #define GAME_SIZE 20
