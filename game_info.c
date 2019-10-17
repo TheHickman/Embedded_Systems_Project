@@ -84,19 +84,6 @@ int check_input(game_info* game)
     return out;
 }
 
-void display_score(int score)
-{
-    if (score == 0) {
-        display_mess (" zero");
-    } else {
-        char charScore[10];
-        itoa(score, charScore, 10);
-        charScore[9] = '\0';
-        display_mess (charScore);
-        tinygl_clear();
-    }
-}
-
 uint8_t pl0_get_winner(int score)
 {
     uint8_t winner_flag = 8;
@@ -120,40 +107,29 @@ uint8_t pl1_get_winner(int score)
     return winner_flag;
 }
 
-void update_speed_display(game_info* game)
+int update_speed_display(int speed)
 {
     char speed_char = '0';
     if (navswitch_push_event_p (NAVSWITCH_NORTH)) {
-            game->speed++;
-            if (game->speed > 5) { //Looping through 1-5
-                game->speed = 1;
+            speed++;
+            if (speed > 5) { //Looping through 1-5
+                speed = 1;
             }
         }
         if (navswitch_push_event_p (NAVSWITCH_SOUTH)) {
-            game->speed--;
-            if (game->speed < 1) { //Ensuring it loops
-                game->speed = 5;
+            speed--;
+            if (speed < 1) { //Ensuring it loops
+                speed = 5;
             }
         }
-    display_char(speed_char + game->speed);
-}
-
-uint8_t confirm_speed(game_info* game, uint8_t loop_check)
-{
-    if (navswitch_push_event_p (NAVSWITCH_PUSH)) { //First person to press decides speed
-        send(game->speed);
-        loop_check += 1;
-        game->p1status = 1;
-    } else if (ir_uart_read_ready_p()) { //If you didn't decide speed this calls
-        game->speed = recv();
-        loop_check += 1;
-    }
-    return loop_check;
+    display_char(speed_char + speed);
+    return speed;
 }
 
 void select_speed(game_info* game)
 {
     navswitch_update();
+    int speed = 1;
     uint16_t counter = 0;
     uint8_t loop_check = 0;
     while (loop_check == 0) {
@@ -161,14 +137,22 @@ void select_speed(game_info* game)
         tinygl_update ();
         navswitch_update();
 
-        update_speed_display(game);
+        speed = update_speed_display(speed);
 
-        if (counter++ > 300) {    //force wait before confirm speed
-            loop_check = confirm_speed(game, loop_check);
+        if (counter++ > 300) {    //force wait to confirm speed
+            if (navswitch_push_event_p (NAVSWITCH_PUSH)) { //First person to press decides speed
+                send(speed);
+                loop_check += 1;
+                game->p1status = 1;
+            }else if (ir_uart_read_ready_p()) { //If you didn't decide speed this calls
+                speed = recv();
+                loop_check += 1;
+            }
         }
+        //counter++;
     }
     tinygl_clear();
     //set time gap and total time loop
-    game->time_gap = 75 * (7-(game->speed));
+    game->time_gap = 75 * (6-speed);
     game->total_time_loop = 3 * game->time_gap;
 }

@@ -25,7 +25,7 @@ typedef struct game_info {
     uint16_t total_time_loop;   //number of ticks per arrow (ie how often arrow is changed)
     uint8_t p1status;           //flag for player number. 0 for p2, 1 for p1
     uint8_t switched;           //flag to prevent scoring multiple times off one arrow
-    int speed;                  //speed level that is selected at the start of the game
+    int speed;
 } game_info;
 
 /**Waits for given number of ticks (on a 600hz cycle)
@@ -54,11 +54,6 @@ int get_winner(int score, int p1_score);
 @param game_info pointer contains the arrow meant to pushed
 */
 int check_input(game_info* game);
-
-/**Displays the score
-@param int score (the score to be displayed)
-*/
-void display_score(int score);
 
 /**Handles score comunication and winner calculation for player 0
 @param int score for player 0 to use in winner calculation

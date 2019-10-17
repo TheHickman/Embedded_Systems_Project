@@ -14,6 +14,7 @@
 #include "system.h"
 #include "tinygl.h"
 #include "../fonts/font5x7_1.h"
+#include <stdlib.h>
 
 
 
@@ -32,5 +33,10 @@ void display_arrow(char direction, int count);
 @param pointer to a message to display
 */
 void display_mess (char* message);
+
+/**Displays the score
+@param int score (the score to be displayed)
+*/
+void display_score(int score);
 
 #endif

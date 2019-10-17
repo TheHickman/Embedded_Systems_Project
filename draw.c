@@ -21,6 +21,19 @@ void display_char (char character)
 }
 
 
+void display_score(int score)
+{
+    if (score == 0) {
+        display_mess (" zero");
+    } else {
+        char charScore[10];
+        itoa(score, charScore, 10);
+        charScore[9] = '\0';
+        display_mess (charScore);
+        tinygl_clear();
+    }
+}
+
 void display_arrow(char direction, int count)
 {
     tinygl_clear();
