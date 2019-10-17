@@ -171,5 +171,4 @@ void select_speed(game_info* game)
     //set time gap and total time loop
     game->time_gap = 75 * (7-(game->speed));
     game->total_time_loop = 3 * game->time_gap;
-    display_score(game->time_gap);
 }
