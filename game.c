@@ -23,14 +23,7 @@
 #define DISP_HZ 600
 #define GAME_SIZE 20
 
-void wait(int ticks)
-{
-    int count_recv = 0;
-    while (count_recv < ticks) {
-        pacer_wait();
-        count_recv++;
-    }
-}
+
 
 
 
@@ -100,34 +93,16 @@ int main (void)
 
     tinygl_clear();
 
-    //send score if p1
-    if (game.p1status == 1) {
-        send(game.score/250);
-    }
-
-    //init values for send/recv of score
-
     uint8_t winner_flag = 0;
-    uint8_t p1score = 0;
-    //if p2
-    if (game.p1status == 0) {
-        //get p1 score
-        p1score = recv();
-
-        //set winner logic val
-        winner_flag = get_winner(&game, p1score);
-
-        //send winner logic val
-        send(winner_flag);
-    }
-
     //if p1
     if (game.p1status == 1) {
-        //wait 100 ticks to give p2 time to win logic val
-        wait(100);
-        //while not recvd
-        winner_flag = recv();
+        winner_flag = pl1_get_winner(game.score/256);
+        if (winner_flag == 8) {
+            winner_flag = pl1_get_winner(game.score%256);
+        }
 
+
+        display_score(game.score);
         //Display win result
         if (winner_flag == 15) {
             display_mess("Loser");
@@ -139,7 +114,15 @@ int main (void)
             display_mess("Error");
         }
     }
-    if (game.p1status == 0) {   //if p2
+
+    //if p0
+    if (game.p1status == 0) {
+        winner_flag = pl0_get_winner(game.score/256);
+        if (winner_flag == 8) {
+            winner_flag = pl0_get_winner(game.score%256);
+        }
+
+        display_score(game.score);
         //Display win result
         if (winner_flag == 15) {
             display_mess("Winner");
@@ -151,9 +134,10 @@ int main (void)
             display_mess("Error");
         }
     }
+
     display_mess("Press mid to play again");
     if (navswitch_push_event_p(NAVSWITCH_PUSH)) {
-    	main();
+        main();
     }
 
 }

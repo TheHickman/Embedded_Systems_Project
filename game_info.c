@@ -14,6 +14,17 @@
 #include "pacer.h"
 #include "draw.h"
 #include "communication.h"
+#include <stdlib.h>
+
+
+void wait(int ticks)
+{
+    int count_recv = 0;
+    while (count_recv < ticks) {
+        pacer_wait();
+        count_recv++;
+    }
+}
 
 int get_score(uint16_t count, game_info* game)
 {
@@ -38,13 +49,13 @@ void switch_arrow(game_info* game)
     game->arrow = arrows[game->randomIndex];
 }
 
-int get_winner(game_info* game, int ply1_score)
-//calculated if ply2
+int get_winner(int score, int p1_score)
+//only called by p0
 {
     int won;
-    if (game->score/256 > ply1_score) {
+    if (score > p1_score) {
         won = 15;
-    } else if (game->score/256 < ply1_score) {
+    } else if (score < p1_score) {
         won = 0;
     } else {
         won = 8;
@@ -73,9 +84,64 @@ int check_input(game_info* game)
     return out;
 }
 
+void display_score(int score)
+{
+    if (score == 0) {
+        display_mess (" zero");
+    } else {
+        char charScore[10];
+        itoa(score, charScore, 10);
+        charScore[9] = '\0';
+        display_mess (charScore);
+        tinygl_clear();
+    }
+}
+
+uint8_t pl0_get_winner(int score)
+{
+    uint8_t winner_flag = 8;
+    //get p1 score
+    int p1score = recv();
+    //set winner logic val
+    winner_flag = get_winner(score, p1score);
+    //send winner logic val
+    send(winner_flag);
+    return winner_flag;
+}
+
+uint8_t pl1_get_winner(int score)
+{
+    uint8_t winner_flag = 8;
+    send(score);
+    //wait 100 ticks to give p2 time to win logic val
+    wait(100);
+    //while not recvd
+    winner_flag = recv();
+    return winner_flag;
+}
+
+int update_speed_display(int speed)
+{
+    char speed_char = '0';
+    if (navswitch_push_event_p (NAVSWITCH_NORTH)) {
+            speed++;
+            if (speed > 5) { //Looping through 1-5
+                speed = 1;
+            }
+        }
+        if (navswitch_push_event_p (NAVSWITCH_SOUTH)) {
+            speed--;
+            if (speed < 1) { //Ensuring it loops
+                speed = 5;
+            }
+        }
+    display_char(speed_char + speed);
+    return speed;
+}
+
 void select_speed(game_info* game)
 {
-    char speed_char = '1';
+    navswitch_update();
     int speed = 1;
     uint16_t counter = 0;
     uint8_t loop_check = 0;
@@ -84,24 +150,7 @@ void select_speed(game_info* game)
         tinygl_update ();
         navswitch_update();
 
-        if (navswitch_push_event_p (NAVSWITCH_NORTH)) {
-            speed_char++;
-            speed++;
-            if (speed_char > '5') { //Looping through 1-5
-                speed_char = '1';
-                speed = 1;
-            }
-        }
-        if (navswitch_push_event_p (NAVSWITCH_SOUTH)) {
-            speed_char--;
-            speed--;
-            if (speed_char < '1') { //Ensuring it loops
-                speed_char = '5';
-                speed = 5;
-            }
-        }
-
-        display_char(speed_char);
+        speed = update_speed_display(speed);
 
         if (counter++ > 300) {    //force wait to confirm speed
             if (navswitch_push_event_p (NAVSWITCH_PUSH)) { //First person to press decides speed
@@ -109,10 +158,10 @@ void select_speed(game_info* game)
                 loop_check += 1;
                 game->p1status = 1;
             }else if (ir_uart_read_ready_p()) { //If you didn't decide speed this calls
-            speed = recv();
-            loop_check += 1;
+                speed = recv();
+                loop_check += 1;
+            }
         }
-        } 
         //counter++;
     }
     tinygl_clear();

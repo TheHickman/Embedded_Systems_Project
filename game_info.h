@@ -15,6 +15,7 @@
 #include "tinygl.h"
 #include "pacer.h"
 #include "draw.h"
+#include <stdlib.h>
 
 typedef struct game_info {
     char arrow;                 //what arrow the game is currently on
@@ -25,6 +26,11 @@ typedef struct game_info {
     uint8_t p1status;           //flag for player number. 0 for p2, 1 for p1
     uint8_t switched;           //flag to prevent scoring multiple times off one arrow
 } game_info;
+
+/**Waits for given number of ticks (on a 600hz cycle)
+@param int ticks, the number of ticks to wait
+*/
+void wait(int ticks);
 
 /**Gets the score based on the count and information in the game_info struct
 @param uint16_t the count of when the button was pressed
@@ -38,15 +44,30 @@ int get_score(uint16_t count, game_info* game);
 void switch_arrow(game_info* game);
 
 /**Sends a character to the other player
-@param game_info pointer contains your score
-@param int contains player1 score
+@param int score contains p0 score
+@param int p1_score contains p1 score
 */
-int get_winner(game_info* game, int ply1_score);
+int get_winner(int score, int p1_score);
 
 /**Checks if input if correct
 @param game_info pointer contains the arrow meant to pushed
 */
 int check_input(game_info* game);
+
+/**Displays the score
+@param int score (the score to be displayed)
+*/
+void display_score(int score);
+
+/**Handles score comunication and winner calculation for player 0
+@param int score for player 0 to use in winner calculation
+*/
+uint8_t pl0_get_winner(int score);
+
+/**Handles score comunication and winner calculation for player 1
+@param int score for player 1 to send
+*/
+uint8_t pl1_get_winner(int score);
 
 /**Selects the speed to play at
 @param game_info pointer is p1status and time_gap is stored
