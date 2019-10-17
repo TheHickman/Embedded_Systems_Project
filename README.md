@@ -54,13 +54,12 @@ A score can only be registered when the arrow is in the middle or the top positi
     Note: The a score can only be registered once per arrow so don't spam or try to get in too early.
     
 Speed chart:
+1 = 0.750 s per position for 2.250 s per arrow cycle
 
-1 = 0.625 s per position for 1.875 s per arrow cycle
+2 = 0.625 s per position for 1.875 s per arrow cycle
 
-2 = 0.500 s per position for 1.500 s per arrow cycle
+3 = 0.500 s per position for 1.500 s per arrow cycle
 
-3 = 0.375 s per position for 1.255 s per arrow cycle
+4 = 0.375 s per position for 1.255 s per arrow cycle
 
-4 = 0.250 s per position for 0.750 s per arrow cycle
-
-5 = 0.125 s per position for 0.375 s per arrow cycle
+5 = 0.250 s per position for 0.750 s per arrow cycle
