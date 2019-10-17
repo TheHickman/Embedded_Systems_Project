@@ -19,13 +19,13 @@
 
 typedef struct game_info {
     char arrow;                 //what arrow the game is currently on
-   	int randomIndex;            //"random" number used to "randomise" arrow choice
+    int randomIndex;            //"random" number used to "randomise" arrow choice
     int score;                  //score on this UCFK
     uint16_t time_gap;          //number of ticks per task/arrow position
     uint16_t total_time_loop;   //number of ticks per arrow (ie how often arrow is changed)
     uint8_t p1status;           //flag for player number. 0 for p2, 1 for p1
     uint8_t switched;           //flag to prevent scoring multiple times off one arrow
-    int speed;
+    int speed;                  //speed is selected by user from 1 to 5
 } game_info;
 
 /**Waits for given number of ticks (on a 600hz cycle)
