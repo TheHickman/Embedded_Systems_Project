@@ -44,26 +44,10 @@ int get_score(uint16_t count, game_info* game);
 */
 void switch_arrow(game_info* game);
 
-/**Sends a character to the other player
-@param int score contains p0 score
-@param int p1_score contains p1 score
-*/
-int get_winner(int score, int p1_score);
-
 /**Checks if input if correct
 @param game_info pointer contains the arrow meant to pushed
 */
 int check_input(game_info* game);
-
-/**Handles score comunication and winner calculation for player 0
-@param int score for player 0 to use in winner calculation
-*/
-uint8_t pl0_get_winner(int score);
-
-/**Handles score comunication and winner calculation for player 1
-@param int score for player 1 to send
-*/
-uint8_t pl1_get_winner(int score);
 
 /**Selects the speed to play at
 @param game_info pointer is p1status and time_gap is stored

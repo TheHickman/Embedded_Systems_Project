@@ -20,6 +20,7 @@
 #include "game_info.h"
 #include "communication.h"
 #include "ledmat.h"
+#include "winner.h"
 
 #define DISP_HZ 600
 #define GAME_SIZE 20
