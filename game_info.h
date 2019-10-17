@@ -25,6 +25,7 @@ typedef struct game_info {
     uint16_t total_time_loop;   //number of ticks per arrow (ie how often arrow is changed)
     uint8_t p1status;           //flag for player number. 0 for p2, 1 for p1
     uint8_t switched;           //flag to prevent scoring multiple times off one arrow
+    int speed;                  //speed level that is selected at the start of the game
 } game_info;
 
 /**Waits for given number of ticks (on a 600hz cycle)

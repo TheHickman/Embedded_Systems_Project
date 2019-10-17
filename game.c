@@ -40,7 +40,8 @@ int main (void)
     tinygl_text_speed_set(20);
 
     //init game_info
-    game_info game = {'U', 0, 0, 0, 0, 0, 0};
+    //arrow, randomIndex, score, time_gap, total_time_loop, p1status, switched, speed
+    game_info game = {'U', 0, 0, 0, 0, 0, 0, 1};
 
     pacer_init(DISP_HZ);
     display_mess("SELECT A SPEED");
