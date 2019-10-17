@@ -49,6 +49,17 @@ void switch_arrow(game_info* game);
 */
 int check_input(game_info* game);
 
+/**Updates the speed displayed
+@param game info pointer that containts the current speed
+*/
+void update_speed_display(game_info* game);
+
+/**Confirms the speed is correct and waits for transmissions
+@param game info pointer that contains speed
+@param uint8_t that is for the waiting
+*/
+uint8_t confirm_speed(game_info* game, uint8_t loop_check);
+
 /**Selects the speed to play at
 @param game_info pointer is p1status and time_gap is stored
 */
